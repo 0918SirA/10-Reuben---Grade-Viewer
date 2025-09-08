@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Student Grade Viewer</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f6f8;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+    .container {
+      background: white;
+      padding: 20px 30px;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      width: 700px;
+      max-width: 95%;
+    }
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    input {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      font-size: 16px;
+    }
+    button {
+      width: 100%;
+      padding: 12px;
+      background: #4CAF50;
+      border: none;
+      color: white;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    button:hover {
+      background: #45a049;
+    }
+    .table-container {
+      width: 100%;
+      overflow-x: auto;
+      margin-top: 15px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 600px;
+    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 8px;
+      text-align: center;
+      font-size: 14px;
+    }
+    th {
+      background: #4CAF50;
+      color: white;
+    }
+    .weight {
+      font-weight: bold;
+    }
+    .final-grade {
+      font-weight: bold;
+      color: red;
+      font-size: 16px;
+    }
+    .hidden {
+      display: none;
+    }
+    @media (max-width: 768px) {
+      .container {
+        padding: 15px;
+        width: 95%;
+      }
+      input, button {
+        font-size: 14px;
+      }
+      th, td {
+        font-size: 12px;
+        padding: 6px;
+      }
+      .final-grade {
+        font-size: 14px;
+      }
+    }
+    @media (max-width: 480px) {
+      h2 {
+        font-size: 18px;
+      }
+      input, button {
+        font-size: 14px;
+        padding: 10px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container" id="loginScreen">
+    <h2>Enter Your PIN</h2>
+    <input type="password" id="pinInput" placeholder="Enter PIN">
+    <button onclick="checkPIN()">Submit</button>
+    <p id="errorMessage" style="color:red; text-align:center;"></p>
+  </div>
+
+  <div class="container hidden" id="gradeScreen">
+    <h2>Student Grade</h2>
+    <p><strong>Name:</strong> <span id="studentName"></span></p>
+    <p><strong>Section:</strong> <span id="studentSection"></span></p>
+
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th rowspan="2">Category</th>
+            <th colspan="3">Written Works</th>
+            <th colspan="3">Performance Task</th>
+            <th colspan="3">Quarterly Exam</th>
+            <th rowspan="2">Initial Grade</th>
+            <th rowspan="2">Final Grade</th>
+          </tr>
+          <tr>
+            <th>Raw</th>
+            <th>%</th>
+            <th>Weight</th>
+            <th>Raw</th>
+            <th>%</th>
+            <th>Weight</th>
+            <th>Raw</th>
+            <th>%</th>
+            <th>Weight</th>
+          </tr>
+        </thead>
+        <tbody id="gradeTable">
+          <!-- Grades will load here -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    const students = {
+      "7979": {
+        name: "ANCHETA, Hynes Marcel, S.",
+        section: "10 - Reuben",
+        grades: [
+          {
+            written: { raw: 143, percent: 79.44, weight: 31.78},
+            performance: { raw: 100, percent: 90.91, weight: 36.36},
+            exam: { raw: 17, percent: 42.50, weight: 8.50},
+            initial: 76.64,
+            final: 85
+          }
+        ]
+      },
+      "7979": {
+        name: "AMPARO, Josh Andrei, C.",
+        section: "10 - Reuben",
+        grades: [
+          {
+            written: { raw: 140, percent: 77.78, weight: 31.11},
+            performance: { raw: 110, percent: 100.00, weight: 40.00},
+            exam: { raw: 27, percent: 67.50, weight: 13.50},
+            initial: 84.61,
+            final: 90
+          }
+        ]
+      },
+      "5094": {
+        name: "BARAWID, Yuan, C.",
+        section: "10 - Reuben",
+        grades: [
+          {
+            written: { raw: 152, percent: 84.44, weight: 33.78},
+            performance: { raw: 110, percent: 100.00, weight: 40.00},
+            exam: { raw: 16, percent: 40.00, weight: 8.00},
+            initial: 81.78,
+            final: 88
+          }
+        ]
+      },
+      "1864": {
+        name: "CULIPAPA, Elgene, A.",
+        section: "10 - Reuben",
+        grades: [
+          {
+            written: { raw: 145.5, percent: 80.83, weight: 32.33},
+            performance: { raw: 90, percent: 81.82, weight: 32.73},
+            exam: { raw: 27, percent: 67.50, weight: 13.50},
+            initial: 78.56,
+            final: 86
+          }
+        ]
+      },
+      "1272": {
+        name: "CUSTODIO, Charlie Brent, A.",
+        section: "10 - Reuben",
+        grades: [
+          {
+            written: { raw: 166, percent: 92.22, weight: 36.89},
+            performance: { raw: 105, percent: 95.45, weight: 38.18},
+            exam: { raw: 27, percent: 67.50, weight: 13.50},
+            initial: 88.57,
+            final: 92
+          }
+        ]
+      },
+      "2891": {
+        name: "GABRIEL, Jasper Zion, B.",
+        section: "10 - Reuben",
+        grades: [
+          {
+            written: { raw: 152.5, percent: 84.72, weight: 33.89},
+            performance: { raw: 100, percent: 90.91, weight: 36.36},
+            exam: { raw: 27, percent: 67.50, weight: 13.50},
+            initial: 83.75,
+            final: 89
+          }
+        ]
+      },
+      "6604": {
+        name: "GARCIA, Kervin Kryst, D.",
+        section: "10 - Reuben",
+        grades: [
+          {
+            written: { raw: 145, percent: 80.56, weight: 32.22},
+            performance: { raw: 110, percent: 100.00, weight: 40.00},
+            exam: { raw: 17, percent: 42.50, weight: 8.50},
+            initial: 80.72,
+            final: 87
+          }
+        ]
+      },
+      "7283": {
+        name: "LIMOS, Santino, R.",
+        section: "10 - Reuben",
+        grades: [
+          {
+            written: { raw: 146, percent: 81.11, weight: 32.44},
+            performance: { raw: 100, percent: 90.91, weight: 36.36},
+            exam: { raw: 25, percent: 62.50, weight: 12.50},
+            initial: 81.31,
+            final: 88
+          }
+        ]
+      },
+      "1232": {
+        name: "MABANGLO, Dean Ceazar, D.",
+        section: "10 - Reuben",
+        grades: [
+          {
+            written: { raw: 168, percent: 93.33, weight: 37.33},
+            performance: { raw: 110, percent: 100.00, weight: 40.00},
+            exam: { raw: 26, percent: 65.00, weight: 13.00},
+            initial: 90.33,
+            final: 93
+          }
+        ]
+      },
+      "5776": {
+        name: "MELENDEZ, Cedric Joshua, P.",
+        section: "10 - Reuben",
+        grades: [
+          {
+            written: { raw: 152, percent: 84.44, weight: 33.78},
+            performance: { raw: 106, percent: 96.36, weight: 38.55},
+            exam: { raw: 25, percent: 62.50, weight: 12.50},
+            initial: 84.82,
+            final: 90
+          }
+        ]
+      },
+      "3706": {
+        name: "MAGLALANG, Moriel, R.",
+        section: "10 - Reuben",
+        grades: [
+          {
+            written: { raw: 172, percent: 95.56, weight: 38.22},
+            performance: { raw: 110, percent: 100.00, weight: 40.00},
+            exam: { raw: 19, percent: 47.50, weight: 9.50},
+            initial: 87.72,
+            final: 92
+          }
+        ]
+      },
+      "2778": {
+        name: "MESA, Xyrhus Samuel, A.",
+        section: "10 - Reuben",
+        grades: [
+          {
+            written: { raw: 161, percent: 89.44, weight: 35.78},
+            performance: { raw: 100, percent: 90.91, weight: 36.36},
+            exam: { raw: 16, percent: 40.00, weight: 8.00},
+            initial: 80.14,
+            final: 87
+          }
+        ]
+      },
+      "1820": {
+        name: "CASTRO, Bernice Rose",
+        section: "10 - Reuben",
+        grades: [
+          {
+            written: { raw: 162, percent: 90.00, weight: 36.00},
+            performance: { raw: 110, percent: 100.00, weight: 40.00},
+            exam: { raw: 17, percent: 42.50, weight: 8.50},
+            initial: 84.50,
+            final: 90
+          }
+        ]
+      },
+      "2613": {
+        name: "GAMBOA, Simonette",
+        section: "10 - Reuben",
+        grades: [
+          {
+            written: { raw: 157, percent: 87.22, weight: 34.89},
+            performance: { raw: 110, percent: 100.00, weight: 40.00},
+            exam: { raw: 21, percent: 52.50, weight: 10.50},
+            initial: 85.39,
+            final: 90
+          }
+        ]
+      },
+      "1658": {
+        name: "GARCIA, Aliyah Nicole, R.",
+        section: "10 - Reuben",
+        grades: [
+          {
+            written: { raw: 152, percent: 84.44, weight: 33.78},
+            performance: { raw: 100, percent: 90.91, weight: 36.36},
+            exam: { raw: 32, percent: 80.00, weight: 16.00},
+            initial: 86.14,
+            final: 91
+          }
+        ]
+      },
+      "3259": {
+        name: "GARCIA, Famous, T.",
+        section: "10 - Reuben",
+        grades: [
+          {
+            written: { raw: 125, percent: 69.44, weight: 27.78},
+            performance: { raw: 100, percent: 90.91, weight: 36.36},
+            exam: { raw: 31, percent: 77.50, weight: 15.50},
+            initial: 79.64,
+            final: 87
+          }
+        ]
+      },
+      "6286": {
+        name: "LABASAN, Aira Danessa, F.",
+        section: "10 - Reuben",
+        grades: [
+          {
+            written: { raw: 145, percent: 80.56, weight: 32.22},
+            performance: { raw: 100, percent: 90.91, weight: 36.36},
+            exam: { raw: 19, percent: 47.50, weight: 9.50},
+            initial: 78.09,
+            final: 86
+          }
+        ]
+      },
+      "8299": {
+        name: "LAGMAN, Khayte Chloe",
+        section: "10 - Reuben",
+        grades: [
+          {
+            written: { raw: 167, percent: 92.78, weight: 37.11},
+            performance: { raw: 105, percent: 95.45, weight: 38.18},
+            exam: { raw: 28, percent: 70.00, weight: 14.00},
+            initial: 89.29,
+            final: 93
+          }
+        ]
+      },
+      "5495": {
+        name: "LAMBINO, Honey Faye, A.",
+        section: "10 - Reuben",
+        grades: [
+          {
+            written: { raw: 168, percent: 93.33, weight: 37.33},
+            performance: { raw: 110, percent: 100.00, weight: 40.00},
+            exam: { raw: 16, percent: 40.00, weight: 8.00},
+            initial: 85.33,
+            final: 90
+          }
+        ]
+      },
+      "2841": {
+        name: "LIMOS, Norlynda May, A.",
+        section: "10 - Reuben",
+        grades: [
+          {
+            written: { raw: 175, percent: 97.22, weight: 38.89},
+            performance: { raw: 110, percent: 100.00, weight: 40.00},
+            exam: { raw: 19, percent: 47.50, weight: 9.50},
+            initial: 88.39,
+            final: 92
+          }
+        ]
+      },
+      "4171": {
+        name: "MACADANGDANG, Ziah Li, G.",
+        section: "10 - Reuben",
+        grades: [
+          {
+            written: { raw: 175, percent: 97.22, weight: 38.89},
+            performance: { raw: 110, percent: 100.00, weight: 40.00},
+            exam: { raw: 22, percent: 55.00, weight: 11.00},
+            initial: 89.89,
+            final: 93
+          }
+        ]
+      },
+      "9766": {
+        name: "MACARANAS, Dannasha Mae, R.",
+        section: "10 - Reuben",
+        grades: [
+          {
+            written: { raw: 169.5, percent: 94.17, weight: 37.67},
+            performance: { raw: 110, percent: 100.00, weight: 40.00},
+            exam: { raw: 20, percent: 50.00, weight: 10.00},
+            initial: 87.67,
+            final: 92
+          }
+        ]
+      },
+      "7397": {
+        name: "MANUEL, Raiza Jean, C.",
+        section: "10 - Reuben",
+        grades: [
+          {
+            written: { raw: 151.5, percent: 84.17, weight: 33.67},
+            performance: { raw: 100, percent: 90.91, weight: 36.36},
+            exam: { raw: 18, percent: 45.00, weight: 9.00},
+            initial: 79.03,
+            final: 86
+          }
+        ]
+      },
+      "3128": {
+        name: "MASANGKAY, Andrea, Y.",
+        section: "10 - Reuben",
+        grades: [
+          {
+            written: { raw: 161, percent: 89.44, weight: 35.78},
+            performance: { raw: 100, percent: 90.91, weight: 36.36},
+            exam: { raw: 22, percent: 55.00, weight: 11.00},
+            initial: 83.14,
+            final: 89
+          }
+        ]
+      },
+      "3524": {
+        name: "MONTOYA, Precious Alexies, C.",
+        section: "10 - Reuben",
+        grades: [
+          {
+            written: { raw: 146, percent: 81.11, weight: 32.44},
+            performance: { raw: 100, percent: 90.91, weight: 36.36},
+            exam: { raw: 23, percent: 57.50, weight: 11.50},
+            initial: 80.31,
+            final: 87
+          }
+        ]
+      },
+      "2880": {
+        name: "NATIVIDAD, Keziah Louise, P.",
+        section: "10 - Reuben",
+        grades: [
+          {
+            written: { raw: 175, percent: 97.22, weight: 38.89},
+            performance: { raw: 110, percent: 100.00, weight: 40.00},
+            exam: { raw: 24, percent: 60.00, weight: 12.00},
+            initial: 90.89,
+            final: 94
+          }
+        ]
+      },
+      "1402": {
+        name: "NAVARRO, Lhiane Jean, P.",
+        section: "10 - Reuben",
+        grades: [
+          {
+            written: { raw: 174, percent: 96.67, weight: 38.67},
+            performance: { raw: 110, percent: 100.00, weight: 40.00},
+            exam: { raw: 22, percent: 55.00, weight: 11.000},
+            initial: 89.67,
+            final: 93
+          }
+        ]
+      },
+      "2894": {
+        name: "OBCENA, Ylennah Gem, J.",
+        section: "10 - Reuben",
+        grades: [
+          {
+            written: { raw: 160, percent: 88.89, weight: 35.56},
+            performance: { raw: 110, percent: 100.00, weight: 40.00},
+            exam: { raw: 23, percent: 57.50, weight: 11.50},
+            initial: 87.06,
+            final: 91
+          }
+        ]
+      },
+      "4835": {
+        name: "ORTIZ, Clyne Angelique, B.",
+        section: "10 - Reuben",
+        grades: [
+          {
+            written: { raw: 149, percent: 82.78, weight: 33.11},
+            performance: { raw: 100, percent: 90.91, weight: 36.36},
+            exam: { raw: 24, percent: 60.00, weight: 12.00},
+            initial: 81.47,
+            final: 88
+          }
+        ]
+      },
+      "8618": {
+        name: "PAQUIZ, Moxie Elise",
+        section: "10 - Reuben",
+        grades: [
+          {
+            written: { raw: 151, percent: 83.89, weight: 33.56},
+            performance: { raw: 110, percent: 100.00, weight: 40.00},
+            exam: { raw: 23, percent: 57.50, weight: 11.50},
+            initial: 85.06,
+            final: 90
+          }
+        ]
+      },
+      "9185": {
+        name: "PUNO, Yen Keithlyn, B.",
+        section: "10 - Reuben",
+        grades: [
+          {
+            written: { raw: 138, percent: 76.67, weight: 30.67},
+            performance: { raw: 100, percent: 90.91, weight: 36.36},
+            exam: { raw: 26, percent: 65.00, weight: 13.00},
+            initial: 80.03,
+            final: 87
+          }
+        ]
+      },
+      "7851": {
+        name: "ROSETES, Grasille Shine, L.",
+        section: "10 - Reuben",
+        grades: [
+          {
+            written: { raw: 174, percent: 96.67, weight: 38.67},
+            performance: { raw: 110, percent: 100.00, weight: 40.00},
+            exam: { raw: 17, percent: 42.50, weight: 8.50},
+            initial: 87.17,
+            final: 91
+          }
+        ]
+      },
+      "6569": {
+        name: "SABANGAN, Angela Nicole, A.",
+        section: "10 - Reuben",
+        grades: [
+          {
+            written: { raw: 170, percent: 94.44, weight: 37.78},
+            performance: { raw: 110, percent: 100.00, weight: 40.00},
+            exam: { raw: 13, percent: 32.50, weight: 6.50},
+            initial: 84.28,
+            final: 90
+          }
+        ]
+      },
+      "8328": {
+        name: "SANCHEZ, Zenea Keisha, F.",
+        section: "10 - Reuben",
+        grades: [
+          {
+            written: { raw: 146, percent: 81.11, weight: 32.44},
+            performance: { raw: 100, percent: 90.91, weight: 36.36},
+            exam: { raw: 16, percent: 40.00, weight: 8.00},
+            initial: 76.81,
+            final: 85
+          }
+        ]
+      },
+      "4899": {
+        name: "UNTALAN, Maan Kamille",
+        section: "10 - Reuben",
+        grades: [
+          {
+            written: { raw: 177, percent: 98.33, weight: 39.33},
+            performance: { raw: 110, percent: 100.00, weight: 40.00},
+            exam: { raw: 29, percent: 72.50, weight: 14.50},
+            initial: 93.83,
+            final: 96
+          }
+        ]
+      }
+    };
+
+    function checkPIN() {
+      const pin = document.getElementById("pinInput").value;
+      const student = students[pin];
+
+      if (student) {
+        document.getElementById("loginScreen").classList.add("hidden");
+        document.getElementById("gradeScreen").classList.remove("hidden");
+
+        document.getElementById("studentName").innerText = student.name;
+        document.getElementById("studentSection").innerText = student.section;
+
+        const tableBody = document.getElementById("gradeTable");
+        tableBody.innerHTML = "";
+
+        student.grades.forEach((g, index) => {
+          const row = `
+            <tr>
+              <td>Quarter ${index + 1}</td>
+              <td>${g.written.raw}</td>
+              <td>${g.written.percent}%</td>
+              <td class="weight">${g.written.weight}</td>
+              <td>${g.performance.raw}</td>
+              <td>${g.performance.percent}%</td>
+              <td class="weight">${g.performance.weight}</td>
+              <td>${g.exam.raw}</td>
+              <td>${g.exam.percent}%</td>
+              <td class="weight">${g.exam.weight}</td>
+              <td>${g.initial}</td>
+              <td class="final-grade">${g.final}</td>
+            </tr>
+          `;
+          tableBody.innerHTML += row;
+        });
+      } else {
+        document.getElementById("errorMessage").innerText = "Invalid PIN. Please try again.";
+      }
+    }
+
+    // Allow pressing Enter in PIN input
+    document.getElementById("pinInput").addEventListener("keypress", function(e) {
+      if (e.key === "Enter") {
+        checkPIN();
+      }
+    });
+  </script>
+</body>
+</html>
